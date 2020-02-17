@@ -392,6 +392,8 @@ void read_archive_content(struct file_data *file_data,
 				exit(-1);
 			}
 		}
+
+		free(file_path);
 	}
 }
 

@@ -23,7 +23,7 @@ void assign_archive_positions(struct file_data *file_data,
 void assign_archive_content_positions(struct file_data *file_data,
 				      archive_ptr_t *position_ptr);
 
-/* Write archive header and file and directory headers to output_file
+/* Write archive entry, file and directory headers to output_file
  * recursively.
  */
 void write_archive_headers(struct file_data *file_data,
@@ -34,7 +34,7 @@ void write_archive_headers(struct file_data *file_data,
 void write_archive_content(struct file_data *file_data,
 			   struct file_wrapper *output_file);
 
-/* Write archive to output_file.
+/* Write archive to to output_file.
  */
 void write_full_archive(struct file_data *file_data,
 			struct file_wrapper *output_file);
@@ -43,18 +43,23 @@ void write_full_archive(struct file_data *file_data,
  */
 int check_file_name(const char *name, size_t buffer_size);
 
-// TODO: docs
+/* Read archive entry, file and directory headers from input_file recursively
+ * starting from position.
+ */
 struct file_data *read_archive_headers(const char *parent_path,
 				       struct file_wrapper *input_file,
 				       archive_ptr_t position);
 
-// TODO: docs
+/* Read archive main header and entry, file and directory headers and return
+ * directory tree.
+ */
 struct file_data *read_full_archive(struct file_wrapper *input_file);
 
-// TODO: docs
+/* Extract file content from archive recursively.
+ */
 void read_archive_content(struct file_data *file_data,
-			   struct file_wrapper *input_file,
-			   const char *output_directory_name);
+			  struct file_wrapper *input_file,
+			  const char *output_directory_name);
 
 #endif
 
