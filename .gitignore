@@ -1,0 +1,3 @@
+obj/*/*.o
+bin/release/main
+bin/debug/main

@@ -1,0 +1,7 @@
+--std=gnu99
+-Wall
+-Wextra
+-Wnull-dereference
+--pedantic
+-I./include
+-I./src
