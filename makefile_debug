@@ -33,6 +33,6 @@ runlist: $(EXECUTABLE)
 	$(EXECUTABLE) list ../output.arc1488
 
 rununpack: $(EXECUTABLE)
-	rm -rf ../output/*
+	rm -rf ../output/
 	mkdir -p ../output/
 	$(EXECUTABLE) unpack ../output.arc1488 ../output
