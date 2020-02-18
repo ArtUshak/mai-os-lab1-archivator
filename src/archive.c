@@ -201,8 +201,8 @@ struct file_data *read_archive_headers(const char *parent_path,
 	while (1) {
 		if (current_position >= (archive_ptr_t)input_file->size) {
 			fprintf(stderr,
-				"Error: header position %ld is exceeding file "
-				"size %lu\n",
+				"Error: header position %lu is exceeding file "
+				"size %ld\n",
 				current_position, input_file->size);
 			exit(-1);
 		}
@@ -345,9 +345,9 @@ void read_archive_content(struct file_data *file_data,
 				fprintf(
 				    stderr,
 				    "Error: file content "
-				    "position %ld is "
+				    "position %lu is "
 				    "exceeding file "
-				    "size %lu\n",
+				    "size %ld\n",
 				    current_file_data->archive_content_position,
 				    input_file->size);
 				exit(-1);
@@ -357,9 +357,9 @@ void read_archive_content(struct file_data *file_data,
 			    (archive_ptr_t)input_file->size) {
 				fprintf(stderr,
 					"Error: file content end "
-					"position %ld is "
+					"position %lu is "
 					"exceeding file "
-					"size %lu\n",
+					"size %ld\n",
 					current_file_data
 						->archive_content_position +
 					    current_file_data->file_size,

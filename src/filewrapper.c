@@ -18,7 +18,10 @@ struct file_wrapper *file_open(const char *pathname, int flags)
 
 	struct stat stat_result;
 	if (fstat(result->fd, &stat_result) < 0)
+	{
+		free(result);
 		return NULL;
+	}
 	result->size = stat_result.st_size;
 
 	if (result->flags & O_APPEND) {
@@ -41,7 +44,10 @@ struct file_wrapper *file_open_with_mode(const char *pathname, int flags,
 
 	struct stat stat_result;
 	if (fstat(result->fd, &stat_result) < 0)
+	{
+		free(result);
 		return NULL;
+	}
 	result->size = stat_result.st_size;
 
 	if (result->flags & O_APPEND) {

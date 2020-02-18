@@ -101,8 +101,7 @@ struct file_data *list_directory(char *directory_name)
 
 	struct file_data *result = list_directory_by_fts(fts);
 
-	if (fts_close(fts) < 0)
-	{
+	if (fts_close(fts) < 0) {
 		perror("fts_close() failed");
 		exit(-1);
 	}
