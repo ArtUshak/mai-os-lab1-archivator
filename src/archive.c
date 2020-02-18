@@ -331,6 +331,7 @@ void read_archive_content(struct file_data *file_data,
 					exit(-1);
 				}
 			}
+
 			if (current_file_data->first_child != NULL)
 				read_archive_content(
 				    current_file_data->first_child, input_file,
@@ -391,6 +392,14 @@ void read_archive_content(struct file_data *file_data,
 				perror("file_close() failed");
 				exit(-1);
 			}
+		}
+
+		struct timespec file_times[2];
+		file_times[0] = current_file_data->st_atim;
+		file_times[1] = current_file_data->st_mtim;
+		if (utimensat(AT_FDCWD, file_path, file_times, 0) < 0) {
+			perror("utimensat() failed");
+			exit(-1);
 		}
 
 		free(file_path);

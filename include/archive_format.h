@@ -26,7 +26,7 @@ struct archive_entry_data {
 	char name[256];		 // file name // TODO
 	struct timespec st_atim; // access time
 	struct timespec st_mtim; // modification time
-	struct timespec st_ctim; // creation time
+	struct timespec st_ctim; // status change time
 };
 
 /* Header for archive file entry, should be present after archive_entry_data for

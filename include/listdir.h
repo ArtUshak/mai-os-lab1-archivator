@@ -16,7 +16,7 @@ struct file_data {
 			  // NULL)
 	struct timespec st_atim; // access time
 	struct timespec st_mtim; // modification time
-	struct timespec st_ctim; // creation time
+	struct timespec st_ctim; // status change time
 
 	struct file_data
 	    *next; // pointer to next sibling file or directory data

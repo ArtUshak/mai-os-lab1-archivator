@@ -4,7 +4,7 @@
 #include <sys/types.h>
 
 #include "archive_format.h"
-#include "filewrapper.h"
+#include "file_wrapper.h"
 #include "listdir.h"
 
 #define FILE_CAT_BUFFER_SIZE 4096

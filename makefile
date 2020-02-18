@@ -1,9 +1,9 @@
 CC=clang
 CFLAGS=-c -std=gnu99 -Wall -Wextra -Wnull-dereference --pedantic -O3 -Os -I./include
 LDFLAGS=-lm
-CPPCHECKFLAGS=-I./include -I/usr/local/include -I/usr/lib/clang/9.0.1/include -I/usr/include --enable=all --force
+CPPCHECKFLAGS=-I./include -I/usr/local/include -I/usr/lib/clang/9.0.1/include -I/usr/include --enable=all --force --suppress=missingIncludeSystem
 SOURCE_DIR=src
-SOURCES=$(SOURCE_DIR)/main.c $(SOURCE_DIR)/listdir.c $(SOURCE_DIR)/util.c $(SOURCE_DIR)/archive.c $(SOURCE_DIR)/filewrapper.c
+SOURCES=$(SOURCE_DIR)/main.c $(SOURCE_DIR)/listdir.c $(SOURCE_DIR)/util.c $(SOURCE_DIR)/archive.c $(SOURCE_DIR)/file_wrapper.c
 OBJ_DIR=obj/release
 OBJECTS=$(patsubst $(SOURCE_DIR)/%.c,$(OBJ_DIR)/%.o,$(SOURCES))
 BIN_DIR=bin/release

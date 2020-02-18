@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include "archive.h"
-#include "filewrapper.h"
+#include "file_wrapper.h"
 #include "listdir.h"
 
 // TODO: more flexible error and info reporting

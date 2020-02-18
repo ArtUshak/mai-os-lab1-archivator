@@ -1,5 +1,5 @@
-#ifndef FILEWRAPPER_H_INCLUDED
-#define FILEWRAPPER_H_INCLUDED
+#ifndef FILE_WRAPPER_H_INCLUDED
+#define FILE_WRAPPER_H_INCLUDED
 
 #include <sys/types.h>
 #include <unistd.h>
