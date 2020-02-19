@@ -129,7 +129,6 @@ int main(int argc, char *argv[])
 
 	switch (program_options.mode) {
 	case MODE_PACK: {
-		// TODO!
 		struct file_data *input_directory_data =
 		    list_directory(program_options.input_name);
 
@@ -199,7 +198,6 @@ int main(int argc, char *argv[])
 		}
 
 		free_directory_tree(input_archive_data);
-		// TODO
 		break;
 	}
 	default: {

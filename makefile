@@ -27,12 +27,12 @@ $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.c
 	$(CC) $(CFLAGS) $< -o $@
 
 runpack: $(EXECUTABLE)
-	$(EXECUTABLE) pack . ../output.arc1488
+	$(EXECUTABLE) pack . ../output.anchorfield
 
 runlist: $(EXECUTABLE)
-	$(EXECUTABLE) list ../output.arc1488
+	$(EXECUTABLE) list ../output.anchorfield
 
 rununpack: $(EXECUTABLE)
-	rm -rf ../output/*
+	rm -rf ../output/
 	mkdir -p ../output/
-	$(EXECUTABLE) unpack ../output.arc1488 ../output
+	$(EXECUTABLE) unpack ../output.anchorfield ../output

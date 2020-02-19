@@ -163,8 +163,8 @@ void write_full_archive(struct file_data *file_data,
 			struct file_wrapper *output_file)
 {
 	struct archive_header header;
-	memset(header.header_sign, '\0', sizeof(header.header_sign));
-	strcpy((char *)header.header_sign, "ARC1488");
+	memcpy(header.header_sign, ARCHIVE_HEADER_SIGN,
+	       ARCHIVE_HEADER_SIGN_SIZE);
 
 	header.root_directory_ptr = file_data->archive_position;
 
@@ -189,6 +189,15 @@ int check_file_name(const char *name, size_t buffer_size)
 	return 0;
 }
 
+int check_file_mode(mode_t mode)
+{
+	mode_t file_type = mode & S_IFMT;
+	if ((file_type != S_IFREG) && (file_type != S_IFDIR)) {
+		return -1;
+	}
+	return 0;
+}
+
 struct file_data *read_archive_headers(const char *parent_path,
 				       struct file_wrapper *input_file,
 				       archive_ptr_t position)
@@ -207,7 +216,6 @@ struct file_data *read_archive_headers(const char *parent_path,
 			exit(-1);
 		}
 
-		// TODO: option
 		// Security check to avoid circular file archive pointers
 		if ((off_t)current_position < input_file->position) {
 			fprintf(stderr, "Error: invalid header position\n");
@@ -234,6 +242,12 @@ struct file_data *read_archive_headers(const char *parent_path,
 			exit(-1);
 		}
 
+		if (check_file_mode((mode_t)entry_header.mode) < 0) {
+			fprintf(stderr, "Error: invalid file mode %x\n",
+				entry_header.mode);
+			exit(-1);
+		}
+
 		struct file_data *data = malloc(sizeof(struct file_data));
 
 		data->first_child = NULL;
@@ -246,7 +260,7 @@ struct file_data *read_archive_headers(const char *parent_path,
 		else
 			data->file_access_path =
 			    str_create_copy(data->file_name);
-		data->file_mode = (mode_t)entry_header.mode; // TODO!: checks
+		data->file_mode = (mode_t)entry_header.mode;
 		data->st_atim = entry_header.st_atim;
 		data->st_mtim = entry_header.st_mtim;
 		data->st_ctim = entry_header.st_ctim;
@@ -261,8 +275,7 @@ struct file_data *read_archive_headers(const char *parent_path,
 				exit(-1);
 			}
 
-			if (directory_header.is_empty == 0) // TODO
-			{
+			if (directory_header.is_empty == 0) {
 				data->first_child = read_archive_headers(
 				    data->file_access_path, input_file,
 				    directory_header.first_child_ptr);
@@ -414,7 +427,12 @@ struct file_data *read_full_archive(struct file_wrapper *input_file)
 		perror("file_read() failed");
 		exit(-1);
 	}
-	// TODO: check header signature
+	printf("%s %s\n", ARCHIVE_HEADER_SIGN, header.header_sign);
+	if (memcmp(header.header_sign, ARCHIVE_HEADER_SIGN,
+		   ARCHIVE_HEADER_SIGN_SIZE) != 0) {
+		fprintf(stderr, "Error: invalid archive header\n");
+		exit(-1);
+	}
 
 	return read_archive_headers(NULL, input_file,
 				    header.root_directory_ptr);

@@ -7,11 +7,18 @@
 
 typedef uint64_t archive_ptr_t;
 
+#define ARCHIVE_HEADER_SIGN_SIZE 32
+#define ARCHIVE_HEADER_SIGN_STR "ARC.AnchorField.v1"
+
+static const char ARCHIVE_HEADER_SIGN[ARCHIVE_HEADER_SIGN_SIZE] =
+    "ARC.AnchorField.v1";
+
 /* Main archive header, should be present at beginning of file.
  */
 struct archive_header {
-	uint8_t header_sign[16]; // Magic signature data
-	archive_ptr_t root_directory_ptr;
+	uint8_t header_sign[ARCHIVE_HEADER_SIGN_SIZE]; // magic signature data
+	archive_ptr_t root_directory_ptr; // address of first root entry header
+					  // in archive file
 };
 
 /* Header for archive entry (file or directory).
@@ -44,7 +51,8 @@ struct archive_file_data {
 struct archive_directory_data {
 	uint8_t is_empty; // 1 if directory is empty (does not contain any files
 			  // or subfolder), 0 otherwise
-	archive_ptr_t first_child_ptr; // address of archive_entry_data for first child (file or subfolder)
+	archive_ptr_t first_child_ptr; // address of archive_entry_data for
+				       // first child (file or subfolder)
 };
 
 #endif

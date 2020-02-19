@@ -43,6 +43,10 @@ void write_full_archive(struct file_data *file_data,
  */
 int check_file_name(const char *name, size_t buffer_size);
 
+/* Return 0 if mode is correct ext4 file mode allowed in archive, -1 otherwise.
+ */
+int check_file_mode(mode_t mode);
+
 /* Read archive entry, file and directory headers from input_file recursively
  * starting from position.
  */

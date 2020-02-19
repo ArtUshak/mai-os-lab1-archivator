@@ -131,13 +131,17 @@ void free_directory_tree(struct file_data *data)
 
 void print_directory_tree(struct file_data *data, unsigned int identation)
 {
+	// TODO
 	struct file_data *current_file_data;
 	for (current_file_data = data; current_file_data != NULL;
 	     current_file_data = current_file_data->next) {
 		unsigned int i;
 		for (i = 0; i < identation; i++)
 			putchar(' ');
-		printf("ELEMENT MODE=%02x SIZE=%012ld NAME=%s PATH=%s\n",
+		printf("%s mode=%02x size=%012ld name=%s path=%s\n",
+		       ((current_file_data->file_mode & S_IFMT) == S_IFDIR)
+			   ? "Directory"
+			   : "File",
 		       current_file_data->file_mode,
 		       current_file_data->file_size,
 		       current_file_data->file_name,
