@@ -1,6 +1,6 @@
 CC=clang
-CFLAGS=-c -std=gnu99 -Wall -Wextra -Wnull-dereference --pedantic -ggdb -I./include -fsanitize=address
-LDFLAGS=-lm -fsanitize=address
+CFLAGS=-c -std=gnu99 -Wall -Wextra -Wnull-dereference --pedantic -ggdb -I./include -fsanitize=address,undefined,nullability,unsigned-integer-overflow
+LDFLAGS=-fsanitize=address,undefined,nullability,unsigned-integer-overflow
 CPPCHECKFLAGS=--std=c99 -I./include -I/usr/local/include -I/usr/lib/clang/9.0.1/include -I/usr/include --enable=all --force --suppress=missingIncludeSystem
 SOURCE_DIR=src
 SOURCES=$(SOURCE_DIR)/main.c $(SOURCE_DIR)/listdir.c $(SOURCE_DIR)/util.c $(SOURCE_DIR)/archive.c $(SOURCE_DIR)/file_wrapper.c

@@ -8,7 +8,6 @@
 typedef uint64_t archive_ptr_t;
 
 #define ARCHIVE_HEADER_SIGN_SIZE 32
-#define ARCHIVE_HEADER_SIGN_STR "ARC.AnchorField.v1"
 
 static const char ARCHIVE_HEADER_SIGN[ARCHIVE_HEADER_SIGN_SIZE] =
     "ARC.AnchorField.v1";

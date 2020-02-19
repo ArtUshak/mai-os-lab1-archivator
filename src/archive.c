@@ -427,7 +427,6 @@ struct file_data *read_full_archive(struct file_wrapper *input_file)
 		perror("file_read() failed");
 		exit(-1);
 	}
-	printf("%s %s\n", ARCHIVE_HEADER_SIGN, header.header_sign);
 	if (memcmp(header.header_sign, ARCHIVE_HEADER_SIGN,
 		   ARCHIVE_HEADER_SIGN_SIZE) != 0) {
 		fprintf(stderr, "Error: invalid archive header\n");
