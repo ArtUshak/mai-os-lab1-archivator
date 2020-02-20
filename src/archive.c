@@ -25,8 +25,8 @@ void assign_archive_positions(struct file_data *file_data,
 			*position_ptr += sizeof(struct archive_directory_data);
 			if (current_file_data->first_child != NULL)
 				assign_archive_positions(
-				    current_file_data->first_child,
-				    position_ptr);
+					current_file_data->first_child,
+					position_ptr);
 		} else {
 			*position_ptr += sizeof(struct archive_file_data);
 		}
@@ -43,11 +43,11 @@ void assign_archive_content_positions(struct file_data *file_data,
 		if ((current_file_data->file_mode & S_IFMT) == S_IFDIR) {
 			if (current_file_data->first_child != NULL)
 				assign_archive_content_positions(
-				    current_file_data->first_child,
-				    position_ptr);
+					current_file_data->first_child,
+					position_ptr);
 		} else {
 			current_file_data->archive_content_position =
-			    *position_ptr;
+				*position_ptr;
 			*position_ptr += current_file_data->file_size;
 		}
 	}
@@ -68,7 +68,7 @@ void write_archive_headers(struct file_data *file_data,
 		} else {
 			entry_data.is_last = 0;
 			entry_data.next_ptr =
-			    current_file_data->next->archive_position;
+				current_file_data->next->archive_position;
 		}
 
 		entry_data.st_atim = current_file_data->st_atim;
@@ -90,8 +90,8 @@ void write_archive_headers(struct file_data *file_data,
 			if (current_file_data->first_child != NULL) {
 				archive_directory_data.is_empty = 0;
 				archive_directory_data.first_child_ptr =
-				    current_file_data->first_child
-					->archive_position;
+					current_file_data->first_child
+						->archive_position;
 			} else {
 				archive_directory_data.is_empty = 1;
 				archive_directory_data.first_child_ptr = 0;
@@ -105,15 +105,15 @@ void write_archive_headers(struct file_data *file_data,
 
 			if (current_file_data->first_child != NULL) {
 				write_archive_headers(
-				    current_file_data->first_child,
-				    output_file);
+					current_file_data->first_child,
+					output_file);
 			}
 		} else {
 			struct archive_file_data archive_file_data;
 			archive_file_data.content_ptr =
-			    current_file_data->archive_content_position;
+				current_file_data->archive_content_position;
 			archive_file_data.content_size =
-			    current_file_data->file_size;
+				current_file_data->file_size;
 
 			if (file_write(output_file, &archive_file_data,
 				       sizeof(struct archive_file_data)) < 0) {
@@ -133,12 +133,12 @@ void write_archive_content(struct file_data *file_data,
 		if ((current_file_data->file_mode & S_IFMT) == S_IFDIR) {
 			if (current_file_data->first_child != NULL) {
 				write_archive_content(
-				    current_file_data->first_child,
-				    output_file);
+					current_file_data->first_child,
+					output_file);
 			}
 		} else {
 			struct file_wrapper *current_file = file_open(
-			    current_file_data->file_access_path, O_RDONLY);
+				current_file_data->file_access_path, O_RDONLY);
 			if (current_file == NULL) {
 				perror("file_open() failed");
 				exit(-1);
@@ -256,10 +256,10 @@ struct file_data *read_archive_headers(const char *parent_path,
 		data->file_name = str_create_copy(entry_header.name);
 		if (parent_path != NULL)
 			data->file_access_path = str_create_concat3(
-			    parent_path, "/", data->file_name);
+				parent_path, "/", data->file_name);
 		else
 			data->file_access_path =
-			    str_create_copy(data->file_name);
+				str_create_copy(data->file_name);
 		data->file_mode = (mode_t)entry_header.mode;
 		data->st_atim = entry_header.st_atim;
 		data->st_mtim = entry_header.st_mtim;
@@ -277,8 +277,8 @@ struct file_data *read_archive_headers(const char *parent_path,
 
 			if (directory_header.is_empty == 0) {
 				data->first_child = read_archive_headers(
-				    data->file_access_path, input_file,
-				    directory_header.first_child_ptr);
+					data->file_access_path, input_file,
+					directory_header.first_child_ptr);
 			}
 		} else if ((data->file_mode & S_IFMT) == S_IFREG) {
 			struct archive_file_data file_header;
@@ -290,7 +290,7 @@ struct file_data *read_archive_headers(const char *parent_path,
 
 			data->file_size = file_header.content_size;
 			data->archive_content_position =
-			    file_header.content_ptr;
+				file_header.content_ptr;
 		} else {
 			// TODO
 			fprintf(stderr,
@@ -325,12 +325,12 @@ void read_archive_content(struct file_data *file_data,
 	struct file_data *current_file_data;
 	for (current_file_data = file_data; current_file_data != NULL;
 	     current_file_data = current_file_data->next) {
-		mode_t file_mode =
-		    current_file_data->file_mode &
-		    (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID | S_ISVTX);
+		mode_t file_mode = current_file_data->file_mode &
+				   (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID |
+				    S_ISGID | S_ISVTX);
 		char *file_path =
-		    str_create_concat3(output_directory_name, "/",
-				       current_file_data->file_access_path);
+			str_create_concat3(output_directory_name, "/",
+					   current_file_data->file_access_path);
 
 		if ((current_file_data->file_mode & S_IFMT) == S_IFDIR) {
 			fprintf(stderr, "Extracting directory to %s...\n",
@@ -347,8 +347,8 @@ void read_archive_content(struct file_data *file_data,
 
 			if (current_file_data->first_child != NULL)
 				read_archive_content(
-				    current_file_data->first_child, input_file,
-				    output_directory_name);
+					current_file_data->first_child,
+					input_file, output_directory_name);
 
 		} else {
 			fprintf(stderr, "Extracting file to %s...\n",
@@ -356,14 +356,14 @@ void read_archive_content(struct file_data *file_data,
 
 			if (current_file_data->archive_content_position >=
 			    (archive_ptr_t)input_file->size) {
-				fprintf(
-				    stderr,
-				    "Error: file content "
-				    "position %lu is "
-				    "exceeding file "
-				    "size %ld\n",
-				    current_file_data->archive_content_position,
-				    input_file->size);
+				fprintf(stderr,
+					"Error: file content "
+					"position %lu is "
+					"exceeding file "
+					"size %ld\n",
+					current_file_data
+						->archive_content_position,
+					input_file->size);
 				exit(-1);
 			}
 			if ((current_file_data->archive_content_position +
@@ -374,15 +374,14 @@ void read_archive_content(struct file_data *file_data,
 					"position %lu is "
 					"exceeding file "
 					"size %ld\n",
-					current_file_data
-						->archive_content_position +
-					    current_file_data->file_size,
+					current_file_data->archive_content_position +
+						current_file_data->file_size,
 					input_file->size);
 				exit(-1);
 			}
 
 			struct file_wrapper *current_file =
-			    file_creat(file_path, file_mode);
+				file_creat(file_path, file_mode);
 			if (current_file == NULL) {
 				perror("file_creat() failed");
 				exit(-1);
@@ -390,7 +389,7 @@ void read_archive_content(struct file_data *file_data,
 
 			if (file_seek(input_file,
 				      (off_t)current_file_data
-					  ->archive_content_position) < 0) {
+					      ->archive_content_position) < 0) {
 				perror("file_seek() failed");
 				exit(-1);
 			}

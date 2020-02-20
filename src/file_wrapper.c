@@ -17,17 +17,16 @@ struct file_wrapper *file_open(const char *pathname, int flags)
 	result->flags = flags;
 
 	struct stat stat_result;
-	if (fstat(result->fd, &stat_result) < 0)
-	{
+	if (fstat(result->fd, &stat_result) < 0) {
 		free(result);
 		return NULL;
 	}
 	result->size = stat_result.st_size;
 
-	if (result->flags & O_APPEND) {
-		result->position = result->size;
-	} else
-		result->position = 0;
+	off_t position = lseek(result->fd, 0, SEEK_SET);
+	if (position < 0)
+		return NULL;
+	result->position = position;
 
 	return result;
 }
@@ -43,8 +42,7 @@ struct file_wrapper *file_open_with_mode(const char *pathname, int flags,
 	result->flags = flags;
 
 	struct stat stat_result;
-	if (fstat(result->fd, &stat_result) < 0)
-	{
+	if (fstat(result->fd, &stat_result) < 0) {
 		free(result);
 		return NULL;
 	}
@@ -139,6 +137,20 @@ int file_seek(struct file_wrapper *file, off_t position)
 		return 0;
 
 	off_t result = lseek(file->fd, position, SEEK_SET);
+	if (result < 0)
+		return -1;
+	file->position = result;
+
+	return 0;
+}
+
+int file_fetch_position(struct file_wrapper *file)
+{
+	if (file == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+	off_t result = lseek(file->fd, 0, SEEK_SET);
 	if (result < 0)
 		return -1;
 	file->position = result;

@@ -39,16 +39,20 @@ int file_close(struct file_wrapper *file);
 int file_write(struct file_wrapper *file, const void *buf, size_t size);
 
 /* Read data to pointer buf, of size bytes to file related to file_wrapper
- * structure. Return 0 on success
+ * structure. Return 0 on success, -1 on error.
  */
 int file_read(struct file_wrapper *file, void *buf, size_t size);
 
-/* Seek position in file related to file_wrapper.
+/* Seek position in file related to file_wrapper. Return 0 on success, -1 on error.
  */
 int file_seek(struct file_wrapper *file, off_t position);
 
+/* Update position in file_wrapper. Return 0 on success, -1 on error.
+ */
+int file_fetch_position(struct file_wrapper *file);
+
 /* Write data of given size from input_file to output_file using buffer of size
- * buffer_size.
+ * buffer_size. Return 0 on success, -1 on error.
  */
 int file_cat(struct file_wrapper *input_file, struct file_wrapper *output_file,
 	     size_t size, size_t buffer_size);
