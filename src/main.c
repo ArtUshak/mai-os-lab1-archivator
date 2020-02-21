@@ -17,7 +17,7 @@ main(int argc, char* argv[])
             root_paths[0] = program_parameters.input_name;
             root_paths[1] = NULL;
 
-            struct file_data* input_directory_data =
+            struct file_data* const input_directory_data =
               list_directory(root_paths, &program_parameters);
 
             archive_ptr_t current_position = sizeof(struct archive_header);
@@ -26,7 +26,7 @@ main(int argc, char* argv[])
             assign_archive_content_positions(
               input_directory_data, &current_position, &program_parameters);
 
-            struct file_wrapper* output_file = file_creat(
+            struct file_wrapper* const output_file = file_creat(
               program_parameters.output_name, S_IRUSR | S_IWUSR | S_IRGRP);
             if (output_file == NULL) {
                 print_perror(&program_parameters, "file_creat() failed");
@@ -44,13 +44,13 @@ main(int argc, char* argv[])
             break;
         }
         case MODE_LIST: {
-            struct file_wrapper* input_file =
+            struct file_wrapper* const input_file =
               file_open(program_parameters.input_name, O_RDONLY);
             if (input_file == NULL) {
                 print_perror(&program_parameters, "file_open() failed");
             }
 
-            struct file_data* input_archive_data =
+            struct file_data* const input_archive_data =
               read_full_archive(input_file, &program_parameters);
 
             if (file_close(input_file) < 0) {
@@ -64,13 +64,13 @@ main(int argc, char* argv[])
             break;
         }
         case MODE_UNPACK: {
-            struct file_wrapper* input_file =
+            struct file_wrapper* const input_file =
               file_open(program_parameters.input_name, O_RDONLY);
             if (input_file == NULL) {
                 print_perror(&program_parameters, "file_open() failed");
             }
 
-            struct file_data* input_archive_data =
+            struct file_data* const input_archive_data =
               read_full_archive(input_file, &program_parameters);
 
             read_archive_content(input_archive_data,
@@ -83,6 +83,7 @@ main(int argc, char* argv[])
             }
 
             free_directory_tree(input_archive_data);
+
             break;
         }
         default: {
