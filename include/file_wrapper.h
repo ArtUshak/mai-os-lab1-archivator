@@ -4,18 +4,14 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-enum file_state
-{
-    OPEN,
-    CLOSED
-};
-
+/* Custom wrapper for Linux files, alternative to FILE from C standard library.
+ */
 struct file_wrapper
 {
-    unsigned int fd;
-    int flags;
-    off_t size;
-    off_t position;
+    unsigned int fd; // file descriptor
+    int flags;       // file open flags
+    off_t size;      // file size in bytes
+    off_t position;  // current position in file in bytes from beginning
 };
 
 /* Open file with flags, create file_wrapper structure for that file and return
