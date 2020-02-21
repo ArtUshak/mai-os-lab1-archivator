@@ -1,9 +1,9 @@
 CC=clang
 CFLAGS=-c -std=gnu99 -Wall -Wextra -Wnull-dereference --pedantic -ggdb -I./include -fsanitize=address,undefined,nullability,unsigned-integer-overflow
 LDFLAGS=-fsanitize=address,undefined,nullability,unsigned-integer-overflow
-CPPCHECKFLAGS=--std=c99 -I./include -I/usr/local/include -I/usr/lib/clang/9.0.1/include -I/usr/include --enable=all --force --suppress=missingIncludeSystem
+CPPCHECKFLAGS=--std=c99 -I./include -I/usr/local/include -I/usr/lib/clang/9.0.1/include -I/usr/include --force --suppress=missingIncludeSystem
 SOURCE_DIR=src
-SOURCES=$(SOURCE_DIR)/main.c $(SOURCE_DIR)/listdir.c $(SOURCE_DIR)/util.c $(SOURCE_DIR)/archive.c $(SOURCE_DIR)/file_wrapper.c
+SOURCES=$(SOURCE_DIR)/main.c $(SOURCE_DIR)/listdir.c $(SOURCE_DIR)/util.c $(SOURCE_DIR)/archive.c $(SOURCE_DIR)/file_wrapper.c $(SOURCE_DIR)/program_options.c
 OBJ_DIR=obj/debug
 OBJECTS=$(patsubst $(SOURCE_DIR)/%.c,$(OBJ_DIR)/%.o,$(SOURCES))
 BIN_DIR=bin/debug
@@ -27,12 +27,12 @@ $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.c
 	$(CC) $(CFLAGS) $< -o $@
 
 runpack: $(EXECUTABLE)
-	$(EXECUTABLE) pack . ../output.anchorfield
+	$(EXECUTABLE) pack . ../output.anchorfield --verbose
 
 runlist: $(EXECUTABLE)
-	$(EXECUTABLE) list ../output.anchorfield
+	$(EXECUTABLE) list ../output.anchorfield --verbose
 
 rununpack: $(EXECUTABLE)
 	rm -rf ../output/
 	mkdir -p ../output/
-	$(EXECUTABLE) unpack ../output.anchorfield ../output
+	$(EXECUTABLE) unpack ../output.anchorfield ../output --verbose

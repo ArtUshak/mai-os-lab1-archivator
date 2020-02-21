@@ -9,204 +9,182 @@
 #include "archive.h"
 #include "file_wrapper.h"
 #include "listdir.h"
+#include "program_options.h"
 
-// TODO: more flexible error and info reporting
-
-enum program_mode {
-	MODE_PACK,
-	MODE_LIST,
-	MODE_UNPACK,
-	MODE_HELP,
-	MODE_UNKNOWN
-};
-
-struct program_options {
-	enum program_mode mode;
-	char *input_name;
-	char *output_name;
-};
-
-void print_usage(const char *program_name)
+struct program_parameters
+parse_program_parameters(int argc, char* argv[])
 {
-	printf("Usage:\n");
-	printf("%s MODE [OPTIONS] [INPUT] [OUTPUT]\n", program_name);
-	printf("Modes:\n");
-	printf(" pack                        create archive OUTPUT and add "
-	       "files from INPUT to it\n");
-	printf(" list                        list files in archive INPUT\n");
-	printf(" unpack                      extract archive INPUT to "
-	       "directory OUTPUT\n");
-	printf(" help                        print this help message\n");
-	printf("Options:\n");
-	printf(
-	    "   -h --help                 print this help message and exit\n");
+    struct program_parameters program_parameters;
+    program_parameters.mode = MODE_UNKNOWN;
+    program_parameters.verbosity = VERBOSITY_QUIET;
+    program_parameters.input_name = NULL;
+    program_parameters.output_name = NULL;
+
+    int i;
+    for (i = 1; i < argc; i++) {
+        char* argument = argv[i];
+
+        // Parse options
+        if ((strcmp(argument, "--help") == 0) ||
+            (strcmp(argument, "-h") == 0)) {
+            program_parameters.mode = MODE_HELP;
+            break;
+        }
+        if ((strcmp(argument, "--verbose") == 0) ||
+            (strcmp(argument, "-v") == 0)) {
+            program_parameters.verbosity = VERBOSITY_VERBOSE;
+            continue;
+        }
+
+        if (program_parameters.mode == MODE_UNKNOWN) {
+            // Parse modes
+            if (strcmp(argument, "pack") == 0) {
+                program_parameters.mode = MODE_PACK;
+                continue;
+            }
+            if (strcmp(argument, "list") == 0) {
+                program_parameters.mode = MODE_LIST;
+                continue;
+            }
+            if (strcmp(argument, "unpack") == 0) {
+                program_parameters.mode = MODE_UNPACK;
+                continue;
+            }
+            if (strcmp(argument, "help") == 0) {
+                program_parameters.mode = MODE_HELP;
+                break;
+            }
+        } else {
+            // Parse INPUT and OUTPUT
+            if ((program_parameters.mode == MODE_PACK) ||
+                (program_parameters.mode == MODE_LIST) ||
+                (program_parameters.mode == MODE_UNPACK)) {
+                if (program_parameters.input_name == NULL) {
+                    program_parameters.input_name = argument;
+                    continue;
+                }
+                if (program_parameters.mode != MODE_LIST)
+			if (program_parameters.output_name == NULL)
+			{
+		   
+                    program_parameters.output_name = argument;
+                    continue;
+                }
+            }
+        }
+
+        // Unexpected argument
+        fprintf(stderr, "Unexpected argument %s\n", argument);
+        program_parameters.mode = MODE_UNKNOWN;
+        break;
+    }
+
+    if ((program_parameters.mode == MODE_PACK) ||
+        (program_parameters.mode == MODE_LIST) ||
+        (program_parameters.mode == MODE_UNPACK)) {
+        if (program_parameters.input_name == NULL) {
+            fprintf(stderr, "INPUT is required, but was not given\n");
+            program_parameters.mode = MODE_UNKNOWN;
+        }
+    }
+    if ((program_parameters.mode == MODE_PACK) ||
+        (program_parameters.mode == MODE_UNPACK)) {
+        if (program_parameters.output_name == NULL) {
+            fprintf(stderr, "OUTPUT is required, but was not given\n");
+            program_parameters.mode = MODE_UNKNOWN;
+        }
+    }
+
+    return program_parameters;
 }
 
-/* Parse command line options and return them as structure
- */
-struct program_options parse_program_options(int argc, char *argv[])
+int
+main(int argc, char* argv[])
 {
-	struct program_options program_options;
-	program_options.mode = MODE_UNKNOWN;
-	program_options.input_name = NULL;
-	program_options.output_name = NULL;
+    struct program_parameters program_parameters =
+      parse_program_parameters(argc, argv);
 
-	int i;
-	for (i = 1; i < argc; i++) {
-		char *argument = argv[i];
+    switch (program_parameters.mode) {
+        case MODE_PACK: {
+            char* root_paths[2];
+            root_paths[0] = program_parameters.input_name;
+            root_paths[1] = NULL;
 
-		// Parse options
-		if (strcmp(argument, "--help") == 0) {
-			program_options.mode = MODE_HELP;
-			break;
-		}
+            struct file_data* input_directory_data =
+              list_directory(root_paths, &program_parameters);
 
-		if (program_options.mode == MODE_UNKNOWN) {
-			// Parse modes
-			if (strcmp(argument, "pack") == 0) {
-				program_options.mode = MODE_PACK;
-				continue;
-			}
-			if (strcmp(argument, "list") == 0) {
-				program_options.mode = MODE_LIST;
-				continue;
-			}
-			if (strcmp(argument, "unpack") == 0) {
-				program_options.mode = MODE_UNPACK;
-				continue;
-			}
-			if (strcmp(argument, "help") == 0) {
-				program_options.mode = MODE_HELP;
-				break;
-			}
-		} else {
-			// Parse INPUT and OUTPUT
-			if ((program_options.mode == MODE_PACK) ||
-			    (program_options.mode == MODE_LIST) ||
-			    (program_options.mode == MODE_UNPACK)) {
-				if (program_options.input_name == NULL) {
-					program_options.input_name = argument;
-					continue;
-				}
-				if (program_options.mode != MODE_LIST) {
-					program_options.output_name = argument;
-					continue;
-				}
-			}
-		}
+            archive_ptr_t current_position = sizeof(struct archive_header);
+            assign_archive_positions(
+              input_directory_data, &current_position, &program_parameters);
+            assign_archive_content_positions(
+              input_directory_data, &current_position, &program_parameters);
 
-		// Unexpected argument
-		fprintf(stderr, "Unexpected argument %s\n", argument);
-		program_options.mode = MODE_UNKNOWN;
-		break;
-	}
+            struct file_wrapper* output_file = file_creat(
+              program_parameters.output_name, S_IRUSR | S_IWUSR | S_IRGRP);
+            if (output_file == NULL) {
+                print_perror(&program_parameters, "file_creat() failed");
+            }
 
-	if ((program_options.mode == MODE_PACK) ||
-	    (program_options.mode == MODE_LIST) ||
-	    (program_options.mode == MODE_UNPACK)) {
-		if (program_options.input_name == NULL) {
-			fprintf(stderr,
-				"INPUT is required, but was not given\n");
-			program_options.mode = MODE_UNKNOWN;
-		}
-	}
-	if ((program_options.mode == MODE_PACK) ||
-	    (program_options.mode == MODE_UNPACK)) {
-		if (program_options.output_name == NULL) {
-			fprintf(stderr,
-				"OUTPUT is required, but was not given\n");
-			program_options.mode = MODE_UNKNOWN;
-		}
-	}
+            write_full_archive(
+              input_directory_data, output_file, &program_parameters);
 
-	return program_options;
-}
+            if (file_close(output_file) < 0) {
+                print_perror(&program_parameters, "file_close() failed");
+            }
 
-int main(int argc, char *argv[])
-{
-	struct program_options program_options =
-	    parse_program_options(argc, argv);
+            free_directory_tree(input_directory_data);
 
-	switch (program_options.mode) {
-	case MODE_PACK: {
-		struct file_data *input_directory_data =
-		    list_directory(program_options.input_name);
+            break;
+        }
+        case MODE_LIST: {
+            struct file_wrapper* input_file =
+              file_open(program_parameters.input_name, O_RDONLY);
+            if (input_file == NULL) {
+                print_perror(&program_parameters, "file_open() failed");
+            }
 
-		archive_ptr_t current_position = sizeof(struct archive_header);
-		assign_archive_positions(input_directory_data,
-					 &current_position);
-		assign_archive_content_positions(input_directory_data,
-						 &current_position);
+            struct file_data* input_archive_data =
+              read_full_archive(input_file, &program_parameters);
 
-		struct file_wrapper *output_file = file_creat(
-		    program_options.output_name, S_IRUSR | S_IWUSR | S_IRGRP);
-		if (output_file == NULL) {
-			perror("file_creat() failed");
-			exit(-1);
-		}
+            if (file_close(input_file) < 0) {
+                print_perror(&program_parameters, "file_close() failed");
+            }
 
-		write_full_archive(input_directory_data, output_file);
+            print_directory_tree(input_archive_data, 0);
 
-		if (file_close(output_file) < 0) {
-			perror("file_close() failed");
-			exit(-1);
-		}
+            free_directory_tree(input_archive_data);
 
-		free_directory_tree(input_directory_data);
+            break;
+        }
+        case MODE_UNPACK: {
+            struct file_wrapper* input_file =
+              file_open(program_parameters.input_name, O_RDONLY);
+            if (input_file == NULL) {
+                print_perror(&program_parameters, "file_open() failed");
+            }
 
-		break;
-	}
-	case MODE_LIST: {
-		struct file_wrapper *input_file =
-		    file_open(program_options.input_name, O_RDONLY);
-		if (input_file == NULL) {
-			perror("file_open() failed");
-			exit(-1);
-		}
+            struct file_data* input_archive_data =
+              read_full_archive(input_file, &program_parameters);
 
-		struct file_data *input_archive_data =
-		    read_full_archive(input_file);
+            read_archive_content(input_archive_data,
+                                 input_file,
+                                 program_parameters.output_name,
+                                 &program_parameters);
 
-		if (file_close(input_file) < 0) {
-			perror("file_close() failed");
-			exit(-1);
-		}
+            if (file_close(input_file) < 0) {
+                print_perror(&program_parameters, "file_close() failed");
+            }
 
-		print_directory_tree(input_archive_data, 0);
+            free_directory_tree(input_archive_data);
+            break;
+        }
+        default: {
+            print_usage(argv[0]);
+            // TODO!
+            break;
+        }
+    }
 
-		free_directory_tree(input_archive_data);
-
-		break;
-	}
-	case MODE_UNPACK: {
-		struct file_wrapper *input_file =
-		    file_open(program_options.input_name, O_RDONLY);
-		if (input_file == NULL) {
-			perror("file_open() failed");
-			exit(-1);
-		}
-
-		struct file_data *input_archive_data =
-		    read_full_archive(input_file);
-
-		read_archive_content(input_archive_data, input_file,
-				      program_options.output_name);
-
-		if (file_close(input_file) < 0) {
-			perror("file_close() failed");
-			exit(-1);
-		}
-
-		free_directory_tree(input_archive_data);
-		break;
-	}
-	default: {
-		print_usage(argv[0]);
-		// TODO!
-		break;
-	}
-	}
-
-	return 0;
+    return 0;
 }
 

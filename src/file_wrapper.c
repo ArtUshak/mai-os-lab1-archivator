@@ -25,7 +25,10 @@ struct file_wrapper *file_open(const char *pathname, int flags)
 
 	off_t position = lseek(result->fd, 0, SEEK_SET);
 	if (position < 0)
+	{
+		free(result);
 		return NULL;
+	}
 	result->position = position;
 
 	return result;

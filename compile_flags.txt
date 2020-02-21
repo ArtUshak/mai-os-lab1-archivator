@@ -5,4 +5,3 @@
 -Wno-unused-const-variable
 --pedantic
 -I./include
--I./src
