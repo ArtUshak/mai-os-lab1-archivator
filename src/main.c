@@ -1,107 +1,14 @@
 #include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "archive.h"
 #include "file_wrapper.h"
 #include "listdir.h"
 #include "program_options.h"
 
-struct program_parameters
-parse_program_parameters(int argc, char* argv[])
-{
-    struct program_parameters program_parameters;
-    program_parameters.mode = MODE_UNKNOWN;
-    program_parameters.verbosity = VERBOSITY_QUIET;
-    program_parameters.input_name = NULL;
-    program_parameters.output_name = NULL;
-
-    int i;
-    for (i = 1; i < argc; i++) {
-        char* argument = argv[i];
-
-        // Parse options
-        if ((strcmp(argument, "--help") == 0) ||
-            (strcmp(argument, "-h") == 0)) {
-            program_parameters.mode = MODE_HELP;
-            break;
-        }
-        if ((strcmp(argument, "--verbose") == 0) ||
-            (strcmp(argument, "-v") == 0)) {
-            program_parameters.verbosity = VERBOSITY_VERBOSE;
-            continue;
-        }
-
-        if (program_parameters.mode == MODE_UNKNOWN) {
-            // Parse modes
-            if (strcmp(argument, "pack") == 0) {
-                program_parameters.mode = MODE_PACK;
-                continue;
-            }
-            if (strcmp(argument, "list") == 0) {
-                program_parameters.mode = MODE_LIST;
-                continue;
-            }
-            if (strcmp(argument, "unpack") == 0) {
-                program_parameters.mode = MODE_UNPACK;
-                continue;
-            }
-            if (strcmp(argument, "help") == 0) {
-                program_parameters.mode = MODE_HELP;
-                break;
-            }
-        } else {
-            // Parse INPUT and OUTPUT
-            if ((program_parameters.mode == MODE_PACK) ||
-                (program_parameters.mode == MODE_LIST) ||
-                (program_parameters.mode == MODE_UNPACK)) {
-                if (program_parameters.input_name == NULL) {
-                    program_parameters.input_name = argument;
-                    continue;
-                }
-                if (program_parameters.mode != MODE_LIST)
-			if (program_parameters.output_name == NULL)
-			{
-		   
-                    program_parameters.output_name = argument;
-                    continue;
-                }
-            }
-        }
-
-        // Unexpected argument
-        fprintf(stderr, "Unexpected argument %s\n", argument);
-        program_parameters.mode = MODE_UNKNOWN;
-        break;
-    }
-
-    if ((program_parameters.mode == MODE_PACK) ||
-        (program_parameters.mode == MODE_LIST) ||
-        (program_parameters.mode == MODE_UNPACK)) {
-        if (program_parameters.input_name == NULL) {
-            fprintf(stderr, "INPUT is required, but was not given\n");
-            program_parameters.mode = MODE_UNKNOWN;
-        }
-    }
-    if ((program_parameters.mode == MODE_PACK) ||
-        (program_parameters.mode == MODE_UNPACK)) {
-        if (program_parameters.output_name == NULL) {
-            fprintf(stderr, "OUTPUT is required, but was not given\n");
-            program_parameters.mode = MODE_UNKNOWN;
-        }
-    }
-
-    return program_parameters;
-}
-
 int
 main(int argc, char* argv[])
 {
-    struct program_parameters program_parameters =
+    const struct program_parameters program_parameters =
       parse_program_parameters(argc, argv);
 
     switch (program_parameters.mode) {

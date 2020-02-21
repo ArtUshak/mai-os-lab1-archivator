@@ -3,7 +3,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 
 #include <errno.h>
 #include <stdio.h>
@@ -149,7 +148,7 @@ write_archive_content(struct file_data* file_data,
                                       program_parameters);
             }
         } else {
-            struct file_wrapper* current_file =
+            struct file_wrapper* const current_file =
               file_open(current_file_data->file_access_path, O_RDONLY);
             if (current_file == NULL) {
                 print_perror(program_parameters, "file_open() failed");
@@ -202,7 +201,7 @@ check_file_name(const char* name, size_t buffer_size)
 int
 check_file_mode(mode_t mode)
 {
-    mode_t file_type = mode & S_IFMT;
+    const mode_t file_type = mode & S_IFMT;
     if ((file_type != S_IFREG) && (file_type != S_IFDIR)) {
         return -1;
     }
@@ -258,7 +257,7 @@ read_archive_headers(const char* parent_path,
                         entry_header.mode);
         }
 
-        struct file_data* data = malloc(sizeof(struct file_data));
+        struct file_data* const data = malloc(sizeof(struct file_data));
 
         data->first_child = NULL;
         data->next = NULL;
@@ -335,10 +334,10 @@ read_archive_content(struct file_data* file_data,
     struct file_data* current_file_data;
     for (current_file_data = file_data; current_file_data != NULL;
          current_file_data = current_file_data->next) {
-        mode_t file_mode =
+        const mode_t file_mode =
           current_file_data->file_mode &
           (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID | S_ISVTX);
-        char* file_path = str_create_concat3(
+        char* const file_path = str_create_concat3(
           output_directory_name, "/", current_file_data->file_access_path);
 
         if ((current_file_data->file_mode & S_IFMT) == S_IFDIR) {
@@ -386,7 +385,7 @@ read_archive_content(struct file_data* file_data,
                             input_file->size);
             }
 
-            struct file_wrapper* current_file =
+            struct file_wrapper* const current_file =
               file_creat(file_path, file_mode);
             if (current_file == NULL) {
                 print_perror(program_parameters, "file_creat() failed");

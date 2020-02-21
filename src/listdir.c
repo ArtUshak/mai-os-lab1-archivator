@@ -3,12 +3,12 @@
 #include <fts.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "archive.h"
 #include "program_options.h"
 #include "util.h"
 
@@ -20,7 +20,7 @@ list_directory_by_fts(FTS* ftsp,
     struct file_data* current_file_data = NULL;
 
     while (1) {
-        FTSENT* ftsent = fts_read(ftsp);
+        FTSENT* const ftsent = fts_read(ftsp);
 
         if (ftsent == NULL) {
             if (errno != 0) {
@@ -38,11 +38,10 @@ list_directory_by_fts(FTS* ftsp,
             break;
         }
 
-        if (((ftsent->fts_statp->st_mode & S_IFMT) != S_IFREG) &
-            ((ftsent->fts_statp->st_mode & S_IFMT) != S_IFDIR))
+        if (check_file_mode(ftsent->fts_statp->st_mode) < 0)
             continue;
 
-        struct file_data* data = malloc(sizeof(struct file_data));
+        struct file_data* const data = malloc(sizeof(struct file_data));
         data->archive_position = 0;
         data->archive_content_position = 0;
         data->first_child = NULL;
@@ -91,14 +90,14 @@ struct file_data*
 list_directory(char* const* root_paths,
                const struct program_parameters* program_parameters)
 {
-    FTS* fts = fts_open(root_paths, FTS_PHYSICAL,
+    FTS* const fts = fts_open(root_paths, FTS_PHYSICAL,
                         fts_compare_function); // TODO
 
     if (fts == NULL) {
         print_perror(program_parameters, "fts_open() failed");
     }
 
-    struct file_data* result = list_directory_by_fts(fts, program_parameters);
+    struct file_data* const result = list_directory_by_fts(fts, program_parameters);
 
     if (fts_close(fts) < 0) {
         print_perror(program_parameters, "fts_close() failed");

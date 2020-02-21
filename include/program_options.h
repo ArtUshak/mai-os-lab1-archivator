@@ -22,6 +22,8 @@ enum program_verbosity
     VERBOSITY_VERBOSE // print error and information messages
 };
 
+/* Program parameters (parsed from command line).
+ */
 struct program_parameters
 {
     enum program_mode mode;
@@ -30,13 +32,25 @@ struct program_parameters
     char* output_name;
 };
 
+/* Parse command line parameters and return them as structure.
+ */
+struct program_parameters parse_program_parameters(int argc,
+                                                   char* const argv[]);
+
+/* Print formatted error message and exit program with non-zero code.
+ */
 void print_error(const struct program_parameters* program_parameters,
                  const char* message,
                  ...);
 
+/* Print error message from errno (using perror) and exit program with non-zero
+ * code.
+ */
 void print_perror(const struct program_parameters* program_parameters,
                   const char* message);
 
+/* Print formatted information message.
+ */
 void print_info(const struct program_parameters* program_parameters,
                 const char* message,
                 ...);
@@ -44,10 +58,6 @@ void print_info(const struct program_parameters* program_parameters,
 /* Print program usage help (program_name is executable name to display).
  */
 void print_usage(const char* program_name);
-
-/* Parse command line parameters and return them as structure.
- */
-struct program_parameters parse_program_parameters(int argc, char* argv[]);
 
 #endif
 
