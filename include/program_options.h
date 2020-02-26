@@ -22,6 +22,8 @@ enum program_verbosity
     VERBOSITY_VERBOSE // print error and information messages
 };
 
+#define FILE_CAT_DEFAULT_BUFFER_SIZE 4096
+
 /* Program parameters (parsed from command line).
  */
 struct program_parameters
@@ -30,7 +32,13 @@ struct program_parameters
     enum program_verbosity verbosity;
     char* input_name;
     char* output_name;
+    size_t file_cat_buffer_size;
 };
+
+/* Parse size input string. It can be in bytes (512), kilobytes (256K),
+ * megabytes (128M). Return -1 on parsing error.
+ */
+ssize_t parse_size(const char* size_string);
 
 /* Parse command line parameters and return them as structure.
  */

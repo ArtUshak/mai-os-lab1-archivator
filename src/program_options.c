@@ -1,5 +1,6 @@
 #include "program_options.h"
 
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,16 +12,50 @@ print_usage(const char* program_name)
     printf("Usage:\n");
     printf("%s MODE [OPTIONS] [INPUT] [OUTPUT]\n", program_name);
     printf("Modes:\n");
-    printf(" pack                        create archive OUTPUT and add "
-           "files from INPUT to it\n");
+    printf(" pack                        create archive OUTPUT and add\n"
+           "                             files from INPUT to it\n");
     printf(" list                        list files in archive INPUT\n");
-    printf(" unpack                      extract archive INPUT to "
-           "directory OUTPUT\n");
+    printf(" unpack                      extract archive INPUT to\n"
+           "                             directory OUTPUT\n");
     printf(" help                        print this help message\n");
     printf("Options:\n");
     printf("   -h --help                 print this help message and exit\n");
-    printf("   -v --verbose              print informational messages when "
-           "running\n");
+    printf("   -v --verbose              print informational messages when\n"
+           "                             running\n");
+    printf(
+      "      --buffer-size          use given buffer size for archive\n"
+      "                             file reading and writing, can be\n"
+      "                             given in bytes (like 512), kilobytes\n"
+      "                             (like 256K) and megabytes (like 128M)\n");
+}
+
+ssize_t
+parse_size(const char* size_string)
+{
+    ssize_t result = 0;
+    const char* ptr;
+    for (ptr = size_string; *ptr; ptr++) {
+        result *= 10;
+        if (isdigit(*ptr)) {
+            result += (ssize_t)(*ptr - '0');
+            continue;
+        }
+        if (*ptr == 'K') {
+            result /= 10;
+            result *= (1 << 10);
+            ptr++;
+            break;
+        }
+        if (*ptr == 'M') {
+            result /= 10;
+            result *= (1 << 20);
+            ptr++;
+            break;
+        }
+    }
+    if (*ptr)
+        return -1;
+    return result;
 }
 
 struct program_parameters
@@ -31,6 +66,7 @@ parse_program_parameters(int argc, char* const argv[])
     program_parameters.verbosity = VERBOSITY_QUIET;
     program_parameters.input_name = NULL;
     program_parameters.output_name = NULL;
+    program_parameters.file_cat_buffer_size = FILE_CAT_DEFAULT_BUFFER_SIZE;
 
     int i;
     for (i = 1; i < argc; i++) {
@@ -46,6 +82,23 @@ parse_program_parameters(int argc, char* const argv[])
             (strcmp(argument, "-v") == 0)) {
             program_parameters.verbosity = VERBOSITY_VERBOSE;
             continue;
+        }
+        if (strcmp(argument, "--buffer-size") == 0) {
+            if ((i + 1) >= argc) {
+                fprintf(stderr, "Error: Option --buffer-size requires size\n");
+                program_parameters.mode = MODE_UNKNOWN;
+                break;
+            } else {
+                i++;
+                ssize_t size = parse_size(argv[i]);
+                if (size < 0) {
+                    fprintf(stderr, "Error: Invalid size value %s\n", argv[i]);
+                    program_parameters.mode = MODE_UNKNOWN;
+                    break;
+                }
+                program_parameters.file_cat_buffer_size = (size_t)size;
+                continue;
+            }
         }
 
         if (program_parameters.mode == MODE_UNKNOWN) {
@@ -85,7 +138,7 @@ parse_program_parameters(int argc, char* const argv[])
         }
 
         // Unexpected argument
-        fprintf(stderr, "Unexpected argument %s\n", argument);
+        fprintf(stderr, "Error: Unexpected argument %s\n", argument);
         program_parameters.mode = MODE_UNKNOWN;
         break;
     }
@@ -94,14 +147,14 @@ parse_program_parameters(int argc, char* const argv[])
         (program_parameters.mode == MODE_LIST) ||
         (program_parameters.mode == MODE_UNPACK)) {
         if (program_parameters.input_name == NULL) {
-            fprintf(stderr, "INPUT is required, but was not given\n");
+            fprintf(stderr, "Error: INPUT is required, but was not given\n");
             program_parameters.mode = MODE_UNKNOWN;
         }
     }
     if ((program_parameters.mode == MODE_PACK) ||
         (program_parameters.mode == MODE_UNPACK)) {
         if (program_parameters.output_name == NULL) {
-            fprintf(stderr, "OUTPUT is required, but was not given\n");
+            fprintf(stderr, "Error: OUTPUT is required, but was not given\n");
             program_parameters.mode = MODE_UNKNOWN;
         }
     }

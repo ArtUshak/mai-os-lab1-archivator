@@ -157,7 +157,7 @@ write_archive_content(struct file_data* file_data,
             if (file_cat(current_file,
                          output_file,
                          current_file_data->file_size,
-                         FILE_CAT_BUFFER_SIZE) < 0) {
+                         program_parameters->file_cat_buffer_size) < 0) {
                 print_perror(program_parameters, "file_cat() failed");
             }
 
@@ -399,7 +399,7 @@ read_archive_content(struct file_data* file_data,
             if (file_cat(input_file,
                          current_file,
                          current_file_data->file_size,
-                         FILE_CAT_BUFFER_SIZE) < 0) {
+                         program_parameters->file_cat_buffer_size) < 0) {
                 print_perror(program_parameters, "file_cat() failed");
             }
 

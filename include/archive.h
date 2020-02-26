@@ -8,8 +8,6 @@
 #include "listdir.h"
 #include "program_options.h"
 
-#define FILE_CAT_BUFFER_SIZE 4096
-
 /* Assign archive_position field to file_data and its children and next entries
  * recursively. First available position address in archive is stored in value
  * referenced by position_ptr.
