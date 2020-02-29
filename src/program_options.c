@@ -10,7 +10,7 @@ void
 print_usage(const char* program_name)
 {
     printf("Usage:\n");
-    printf("%s MODE [OPTIONS] [INPUT] [OUTPUT]\n", program_name);
+    printf("%s MODE [OPTIONS]\n", program_name);
     printf("Modes:\n");
     printf(" pack                        create archive OUTPUT and add\n"
            "                             files from INPUT to it\n");
@@ -22,8 +22,10 @@ print_usage(const char* program_name)
     printf("   -h --help                 print this help message and exit\n");
     printf("   -v --verbose              print informational messages when\n"
            "                             running\n");
+    printf("   -i --input NAME           input file or directory name\n");
+    printf("   -o --output NAME          output file or directory name\n");
     printf(
-      "      --buffer-size          use given buffer size for archive\n"
+      "      --buffer-size SIZE     use given buffer size for archive\n"
       "                             file reading and writing, can be\n"
       "                             given in bytes (like 512), kilobytes\n"
       "                             (like 256K) and megabytes (like 128M)\n");
@@ -87,6 +89,30 @@ parse_program_parameters(int argc, char* const argv[])
             program_parameters.verbosity = VERBOSITY_VERBOSE;
             continue;
         }
+        if ((strcmp(argument, "--input") == 0) ||
+            (strcmp(argument, "-i") == 0)) {
+            if ((i + 1) >= argc) {
+                fprintf(stderr, "Error: Option --input requires path\n");
+                program_parameters.mode = MODE_UNKNOWN;
+                break;
+            } else {
+                i++;
+                program_parameters.input_name = argv[i];
+            }
+            continue;
+        }
+        if ((strcmp(argument, "--output") == 0) ||
+            (strcmp(argument, "-o") == 0)) {
+            if ((i + 1) >= argc) {
+                fprintf(stderr, "Error: Option --output requires path\n");
+                program_parameters.mode = MODE_UNKNOWN;
+                break;
+            } else {
+                i++;
+                program_parameters.output_name = argv[i];
+            }
+            continue;
+        }
         if (strcmp(argument, "--buffer-size") == 0) {
             if ((i + 1) >= argc) {
                 fprintf(stderr, "Error: Option --buffer-size requires size\n");
@@ -130,22 +156,6 @@ parse_program_parameters(int argc, char* const argv[])
             if (strcmp(argument, "help") == 0) {
                 program_parameters.mode = MODE_HELP;
                 break;
-            }
-        } else {
-            // Parse INPUT and OUTPUT
-            if ((program_parameters.mode == MODE_PACK) ||
-                (program_parameters.mode == MODE_LIST) ||
-                (program_parameters.mode == MODE_UNPACK)) {
-                if (program_parameters.input_name == NULL) {
-                    program_parameters.input_name = argument;
-                    continue;
-                }
-                if (program_parameters.mode != MODE_LIST)
-                    if (program_parameters.output_name == NULL) {
-
-                        program_parameters.output_name = argument;
-                        continue;
-                    }
             }
         }
 

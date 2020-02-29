@@ -47,6 +47,9 @@ list_directory_by_fts(FTS* ftsp,
             continue;
 
         struct file_data* const data = malloc(sizeof(struct file_data));
+        if (data == NULL)
+            print_perror(program_parameters, "malloc() failed");
+
         data->archive_position = 0;
         data->archive_content_position = 0;
         data->first_child = NULL;
@@ -56,9 +59,13 @@ list_directory_by_fts(FTS* ftsp,
         data->st_mtim = ftsent->fts_statp->st_mtim;
         data->st_ctim = ftsent->fts_statp->st_ctim;
         data->file_name = str_create_copy(ftsent->fts_name);
+        if (data->file_name == NULL)
+            print_perror(program_parameters, "str_create_copy() failed");
         data->file_mode = ftsent->fts_statp->st_mode;
         data->file_size = ftsent->fts_statp->st_size;
         data->file_access_path = str_create_copy(ftsent->fts_path);
+        if (data->file_name == NULL)
+            print_perror(program_parameters, "str_create_copy() failed");
 
         if (ftsent->fts_info == FTS_D) {
             data->first_child = list_directory_by_fts(ftsp, program_parameters);

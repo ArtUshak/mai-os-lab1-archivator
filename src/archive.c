@@ -240,11 +240,9 @@ read_archive_headers(const char* parent_path,
         }
 
         struct archive_entry_data entry_header;
-        if (file_read(input_file,
-                      &entry_header,
-                      sizeof(struct archive_entry_data)) < 0) {
+        if (file_read(
+              input_file, &entry_header, sizeof(struct archive_entry_data)) < 0)
             print_perror(program_parameters, "file_read() failed");
-        }
 
         if (check_file_name(entry_header.name, sizeof(entry_header.name)) < 0) {
             entry_header.name[sizeof(entry_header.name) - 1] = '\0';
@@ -253,23 +251,31 @@ read_archive_headers(const char* parent_path,
                         entry_header.name);
         }
 
-        if (check_file_mode((mode_t)entry_header.mode) < 0) {
+        if (check_file_mode((mode_t)entry_header.mode) < 0)
             print_error(program_parameters,
                         "Error: invalid file mode %x\n",
                         entry_header.mode);
-        }
 
         struct file_data* const data = malloc(sizeof(struct file_data));
+        if (data == NULL)
+            print_perror(program_parameters, "malloc() failed");
 
         data->first_child = NULL;
         data->next = NULL;
         data->file_size = 0;
         data->file_name = str_create_copy(entry_header.name);
-        if (parent_path != NULL)
+        if (data->file_name == NULL)
+            print_perror(program_parameters, "str_create_copy() failed");
+        if (parent_path != NULL) {
             data->file_access_path =
               str_create_concat3(parent_path, "/", data->file_name);
-        else
+            if (data->file_access_path == NULL)
+                print_perror(program_parameters, "str_create_concat3() failed");
+        } else {
             data->file_access_path = str_create_copy(data->file_name);
+            if (data->file_access_path == NULL)
+                print_perror(program_parameters, "str_create_copy() failed");
+        }
         data->file_mode = (mode_t)entry_header.mode;
         data->symlink_target = NULL;
         data->st_atim = entry_header.st_atim;
@@ -341,10 +347,13 @@ read_archive_content(struct file_data* file_data,
         const mode_t file_mode =
           current_file_data->file_mode &
           (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID | S_ISVTX);
-        int need_time_change = ((current_file_data->file_mode & S_IFMT) == S_IFDIR) ||
-                               ((current_file_data->file_mode & S_IFMT) == S_IFREG);
+        int need_time_change =
+          ((current_file_data->file_mode & S_IFMT) == S_IFDIR) ||
+          ((current_file_data->file_mode & S_IFMT) == S_IFREG);
         char* const file_path = str_create_concat3(
           output_directory_name, "/", current_file_data->file_access_path);
+        if (file_path == NULL)
+            print_perror(program_parameters, "str_create_concat3() failed");
 
         if ((current_file_data->file_mode & S_IFMT) == S_IFDIR) {
             print_info(
@@ -441,6 +450,9 @@ read_archive_content(struct file_data* file_data,
 
             current_file_data->symlink_target =
               malloc(current_file_data->file_size);
+            if (current_file_data->symlink_target == NULL)
+                print_perror(program_parameters, "malloc() failed");
+
             if (file_seek(input_file,
                           (off_t)current_file_data->archive_content_position) <
                 0)

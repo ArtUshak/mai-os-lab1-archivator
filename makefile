@@ -40,13 +40,3 @@ $(EXECUTABLE): $(OBJECTS)
 $(OBJ_DIR)/%.o: $(SOURCE_DIR)/%.c
 	$(CC) $(CFLAGS) $< -o $@
 
-runpack: $(EXECUTABLE)
-	$(EXECUTABLE) pack . ../output.anchorfield
-
-runlist: $(EXECUTABLE)
-	$(EXECUTABLE) list ../output.anchorfield
-
-rununpack: $(EXECUTABLE)
-	rm -rf ../output/
-	mkdir -p ../output/
-	$(EXECUTABLE) unpack ../output.anchorfield ../output

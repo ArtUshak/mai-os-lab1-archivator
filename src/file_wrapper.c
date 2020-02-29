@@ -14,6 +14,8 @@ file_open(const char* pathname, int flags)
     if (fd < 0)
         return NULL;
     struct file_wrapper* const result = malloc(sizeof(struct file_wrapper));
+    if (result == NULL)
+        return NULL;
     result->fd = fd;
     result->flags = flags;
 
@@ -41,6 +43,8 @@ file_open_with_mode(const char* pathname, int flags, mode_t mode)
     if (fd < 0)
         return NULL;
     struct file_wrapper* const result = malloc(sizeof(struct file_wrapper));
+    if (result == NULL)
+        return NULL;
     result->fd = fd;
     result->flags = flags;
 
@@ -173,6 +177,8 @@ file_cat(struct file_wrapper* input_file,
          size_t buffer_size)
 {
     char* const buffer = malloc(buffer_size);
+    if (buffer == NULL)
+        return -1;
     unsigned int portion_size = buffer_size;
 
     while (size > 0) {
