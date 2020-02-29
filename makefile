@@ -21,7 +21,7 @@ SOURCES = $(SOURCE_DIR)/main.c $(SOURCE_DIR)/listdir.c $(SOURCE_DIR)/util.c $(SO
 OBJ_DIR = obj/$(BUILD_TARGET)
 OBJECTS = $(patsubst $(SOURCE_DIR)/%.c,$(OBJ_DIR)/%.o,$(SOURCES))
 BIN_DIR = bin/$(BUILD_TARGET)
-EXECUTABLE=$(BIN_DIR)/main
+EXECUTABLE = $(BIN_DIR)/anchorfield
 
 build: $(EXECUTABLE)
 
