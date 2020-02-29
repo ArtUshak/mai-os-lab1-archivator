@@ -11,7 +11,7 @@ enum program_mode
     MODE_LIST,   // list directories and files in archive
     MODE_UNPACK, // extract archive
     MODE_HELP,   // print help message
-    MODE_UNKNOWN // invalid mode or option
+    MODE_UNKNOWN // invalid mode or option or no mode given
 };
 
 /* Program verbosity (which messages to display).
@@ -20,6 +20,15 @@ enum program_verbosity
 {
     VERBOSITY_QUIET,  // print error messages only
     VERBOSITY_VERBOSE // print error and information messages
+};
+
+/* Symlink behaviour mode.
+ */
+enum symlink_mode
+{
+    SYMLINK_MODE_IGNORE, // ignore symlinks at all
+    SYMLINK_MODE_PHYSICAL, // write symlink data to archive file
+    SYMLINK_MODE_UNKNOWN // no mode given
 };
 
 #define FILE_CAT_DEFAULT_BUFFER_SIZE 4096
@@ -33,6 +42,7 @@ struct program_parameters
     char* input_name;
     char* output_name;
     size_t file_cat_buffer_size;
+    enum symlink_mode symlink_mode;
 };
 
 /* Parse size input string. It can be in bytes (512), kilobytes (256K),

@@ -1,5 +1,7 @@
 #include "util.h"
 
+#include <fcntl.h>
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -38,5 +40,32 @@ str_create_concat3(const char* string1,
     strcpy(result + length1, string2);
     strcpy(result + length1 + length2, string3);
     return result;
+}
+
+#include <stdio.h>
+
+char*
+do_readlinkat(int dirfd, const char* pathname)
+{
+    size_t buffer_size = 64;
+    char* buffer = malloc(buffer_size);
+    while (1) {
+        ssize_t result = readlinkat(dirfd, pathname, buffer, buffer_size - 1);
+        if (result < 0) {
+            free(buffer);
+            return NULL;
+        }
+        if ((size_t)result < (buffer_size - 1)) {
+            buffer[result] = 0;
+            return buffer;
+        }
+        buffer_size *= 2;
+        char* new_buffer = realloc(buffer, buffer_size);
+        if (buffer == NULL) {
+            free(buffer);
+            return NULL;
+        }
+        buffer = new_buffer;
+    }
 }
 

@@ -142,28 +142,29 @@ write_archive_content(struct file_data* file_data,
     for (current_file_data = file_data; current_file_data != NULL;
          current_file_data = current_file_data->next) {
         if ((current_file_data->file_mode & S_IFMT) == S_IFDIR) {
-            if (current_file_data->first_child != NULL) {
+            if (current_file_data->first_child != NULL)
                 write_archive_content(current_file_data->first_child,
                                       output_file,
                                       program_parameters);
-            }
-        } else {
+        } else if ((current_file_data->file_mode & S_IFMT) == S_IFREG) {
             struct file_wrapper* const current_file =
               file_open(current_file_data->file_access_path, O_RDONLY);
-            if (current_file == NULL) {
+            if (current_file == NULL)
                 print_perror(program_parameters, "file_open() failed");
-            }
 
             if (file_cat(current_file,
                          output_file,
                          current_file_data->file_size,
-                         program_parameters->file_cat_buffer_size) < 0) {
+                         program_parameters->file_cat_buffer_size) < 0)
                 print_perror(program_parameters, "file_cat() failed");
-            }
 
-            if (file_close(current_file) < 0) {
+            if (file_close(current_file) < 0)
                 print_perror(program_parameters, "file_close() failed");
-            }
+        } else if ((current_file_data->file_mode & S_IFMT) == S_IFLNK) {
+            if (file_write(output_file,
+                           current_file_data->symlink_target,
+                           current_file_data->file_size) < 0)
+                print_perror(program_parameters, "file_write() failed");
         }
     }
 }
@@ -202,7 +203,8 @@ int
 check_file_mode(mode_t mode)
 {
     const mode_t file_type = mode & S_IFMT;
-    if ((file_type != S_IFREG) && (file_type != S_IFDIR)) {
+    if ((file_type != S_IFREG) && (file_type != S_IFDIR) &&
+        (file_type != S_IFLNK)) {
         return -1;
     }
     return 0;
@@ -269,6 +271,7 @@ read_archive_headers(const char* parent_path,
         else
             data->file_access_path = str_create_copy(data->file_name);
         data->file_mode = (mode_t)entry_header.mode;
+        data->symlink_target = NULL;
         data->st_atim = entry_header.st_atim;
         data->st_mtim = entry_header.st_mtim;
         data->st_ctim = entry_header.st_ctim;
@@ -289,7 +292,8 @@ read_archive_headers(const char* parent_path,
                                        directory_header.first_child_ptr,
                                        program_parameters);
             }
-        } else if ((data->file_mode & S_IFMT) == S_IFREG) {
+        } else if (((data->file_mode & S_IFMT) == S_IFREG) ||
+                   (data->file_mode & S_IFMT) == S_IFLNK) {
             struct archive_file_data file_header;
             if (file_read(input_file,
                           &file_header,
@@ -303,7 +307,7 @@ read_archive_headers(const char* parent_path,
             // TODO
             print_error(program_parameters,
                         "Error: invalid archive entry type "
-                        "(should be either directory or file)\n");
+                        "(should be either directory, symlink or file)\n");
         }
 
         if (first_file_data == NULL) {
@@ -337,6 +341,8 @@ read_archive_content(struct file_data* file_data,
         const mode_t file_mode =
           current_file_data->file_mode &
           (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID | S_ISVTX);
+        int need_time_change = ((current_file_data->file_mode & S_IFMT) == S_IFDIR) ||
+                               ((current_file_data->file_mode & S_IFMT) == S_IFREG);
         char* const file_path = str_create_concat3(
           output_directory_name, "/", current_file_data->file_access_path);
 
@@ -358,7 +364,7 @@ read_archive_content(struct file_data* file_data,
                                      output_directory_name,
                                      program_parameters);
 
-        } else {
+        } else if ((current_file_data->file_mode & S_IFMT) == S_IFREG) {
             print_info(
               program_parameters, "Extracting file to %s...\n", file_path);
 
@@ -406,13 +412,65 @@ read_archive_content(struct file_data* file_data,
             if (file_close(current_file) < 0) {
                 print_perror(program_parameters, "file_close() failed");
             }
+        } else if ((current_file_data->file_mode & S_IFMT) == S_IFLNK) {
+            print_info(
+              program_parameters, "Extracting symlink to %s...\n", file_path);
+
+            if (current_file_data->archive_content_position >=
+                (archive_ptr_t)input_file->size) {
+                print_error(program_parameters,
+                            "Error: file content "
+                            "position %lu is "
+                            "exceeding file "
+                            "size %ld\n",
+                            current_file_data->archive_content_position,
+                            input_file->size);
+            }
+            if ((current_file_data->archive_content_position +
+                 current_file_data->file_size) >
+                (archive_ptr_t)input_file->size) {
+                print_error(program_parameters,
+                            "Error: file content end "
+                            "position %lu is "
+                            "exceeding file "
+                            "size %ld\n",
+                            current_file_data->archive_content_position +
+                              current_file_data->file_size,
+                            input_file->size);
+            }
+
+            current_file_data->symlink_target =
+              malloc(current_file_data->file_size);
+            if (file_seek(input_file,
+                          (off_t)current_file_data->archive_content_position) <
+                0)
+                print_perror(program_parameters, "file_seek() failed");
+            if (file_read(input_file,
+                          current_file_data->symlink_target,
+                          current_file_data->file_size) < 0)
+                print_perror(program_parameters, "file_read() failed");
+
+            if (current_file_data
+                  ->symlink_target[current_file_data->file_size - 1] != 0) {
+                current_file_data
+                  ->symlink_target[current_file_data->file_size - 1] = 0;
+                print_error(program_parameters,
+                            "Error: symlink target %s is not NULL-terminated\n",
+                            current_file_data->symlink_target);
+            }
+
+            if (symlink(current_file_data->symlink_target, file_path) < 0) {
+                print_perror(program_parameters, "symlink() failed");
+            }
         }
 
-        struct timespec file_times[2];
-        file_times[0] = current_file_data->st_atim;
-        file_times[1] = current_file_data->st_mtim;
-        if (utimensat(AT_FDCWD, file_path, file_times, 0) < 0) {
-            print_perror(program_parameters, "utimensat() failed");
+        if (need_time_change) {
+            struct timespec file_times[2];
+            file_times[0] = current_file_data->st_atim;
+            file_times[1] = current_file_data->st_mtim;
+            if (utimensat(AT_FDCWD, file_path, file_times, 0) < 0) {
+                print_perror(program_parameters, "utimensat() failed");
+            }
         }
 
         free(file_path);

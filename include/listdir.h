@@ -16,11 +16,13 @@ struct file_data
     char* file_name;        // name of file or directory
     mode_t file_mode;       // file mode (can be used to determine whether it is
                             // file or directory)
-    off_t file_size; // size (for files only, otherwise it should be set to
-                     // NULL)
+    off_t file_size; // size (for files and symlinks only, otherwise it should
+                     // be set to NULL)
     struct timespec st_atim; // access time
     struct timespec st_mtim; // modification time
     struct timespec st_ctim; // status change time
+    char* symlink_target; // symlink target path (for symlinks only, otherwise
+                          // it should be set to NULL)
 
     struct file_data* next; // pointer to next sibling file or directory data
     struct file_data*
@@ -30,8 +32,9 @@ struct file_data
 
     archive_ptr_t archive_position; // position of corresponding header in
                                     // archive file
-    archive_ptr_t archive_content_position; // position of file content data in
-                                            // archive file (for files only)
+    archive_ptr_t
+      archive_content_position; // position of file content data in
+                                // archive file (for files and symlinks only)
 };
 
 /* Populate directory tree recursively using FTS.
@@ -44,8 +47,9 @@ struct file_data* list_directory_by_fts(
  * files and directories will be added to directory tree, symlinks, block
  * devices and others will be ignored.
  */
-struct file_data* list_directory(char* const* root_paths,
-                                 const struct program_parameters* program_parameters);
+struct file_data* list_directory(
+  char* const* root_paths,
+  const struct program_parameters* program_parameters);
 
 /* Deallocate memory used for directory tree.
  */

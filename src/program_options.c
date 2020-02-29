@@ -27,6 +27,9 @@ print_usage(const char* program_name)
       "                             file reading and writing, can be\n"
       "                             given in bytes (like 512), kilobytes\n"
       "                             (like 256K) and megabytes (like 128M)\n");
+    printf(
+      "      --use-symlinks         add symlinks to created archive file\n");
+    printf("      --ignore-symlinks      ignore symlinks\n");
 }
 
 ssize_t
@@ -67,6 +70,7 @@ parse_program_parameters(int argc, char* const argv[])
     program_parameters.input_name = NULL;
     program_parameters.output_name = NULL;
     program_parameters.file_cat_buffer_size = FILE_CAT_DEFAULT_BUFFER_SIZE;
+    program_parameters.symlink_mode = SYMLINK_MODE_UNKNOWN;
 
     int i;
     for (i = 1; i < argc; i++) {
@@ -99,6 +103,14 @@ parse_program_parameters(int argc, char* const argv[])
                 program_parameters.file_cat_buffer_size = (size_t)size;
                 continue;
             }
+        }
+        if (strcmp(argument, "--ignore-symlinks") == 0) {
+            program_parameters.symlink_mode = SYMLINK_MODE_IGNORE;
+            continue;
+        }
+        if (strcmp(argument, "--use-symlinks") == 0) {
+            program_parameters.symlink_mode = SYMLINK_MODE_PHYSICAL;
+            continue;
         }
 
         if (program_parameters.mode == MODE_UNKNOWN) {
@@ -158,6 +170,9 @@ parse_program_parameters(int argc, char* const argv[])
             program_parameters.mode = MODE_UNKNOWN;
         }
     }
+
+    if (program_parameters.symlink_mode == SYMLINK_MODE_UNKNOWN)
+        program_parameters.symlink_mode = SYMLINK_MODE_PHYSICAL;
 
     return program_parameters;
 }

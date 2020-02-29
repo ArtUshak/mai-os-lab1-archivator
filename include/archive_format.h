@@ -10,7 +10,7 @@ typedef uint64_t archive_ptr_t;
 #define ARCHIVE_HEADER_SIGN_SIZE 32
 
 static const char ARCHIVE_HEADER_SIGN[ARCHIVE_HEADER_SIGN_SIZE] =
-  "ARC.AnchorField.v1";
+  "ARC.AnchorField.v2";
 
 /* Main archive header, should be present at beginning of file.
  */
@@ -21,12 +21,12 @@ struct archive_header
                                       // in archive file
 };
 
-/* Header for archive entry (file or directory).
+/* Header for archive entry (file, symlink or directory).
  */
 struct archive_entry_data
 {
-    uint32_t mode;   // file mode (can be used to determine whether it is file
-                     // or directory)
+    uint32_t mode;   // file mode (can be used to determine whether it is file,
+                     // symlink or directory)
     uint8_t is_last; // 1 if file or directory is last in its parent
                      // directory (does not have next sibling), 0 otherwise
     archive_ptr_t next_ptr;  // address of archive_entry_data for next
@@ -38,13 +38,13 @@ struct archive_entry_data
 };
 
 /* Header for archive file entry, should be present after archive_entry_data for
- * files.
+ * files and symlinks.
  */
 struct archive_file_data
 {
     archive_ptr_t
       content_ptr; // address of file content beginning in archive file
-    archive_ptr_t content_size; // size of file
+    archive_ptr_t content_size; // size of file content (or symlink target path)
 };
 
 /* Header for archive directory entry, should be present after

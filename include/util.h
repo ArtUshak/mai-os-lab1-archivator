@@ -1,6 +1,8 @@
 #ifndef UTIL_H_INCLUDED
 #define UTIL_H_INCLUDED
 
+#include <unistd.h>
+
 /* Create dynamically allocated copy of null-terminated string and return it.
  */
 char* str_create_copy(const char* string);
@@ -16,6 +18,8 @@ char* str_create_concat2(const char* string1, const char* string2);
 char* str_create_concat3(const char* string1,
                          const char* string2,
                          const char* string3);
+
+char* do_readlinkat(int dirfd, const char* pathname);
 
 #endif
 
