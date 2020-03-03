@@ -1,3 +1,4 @@
 obj/*/*.o
+*.d
 bin/release/anchorfield
 bin/debug/anchorfield
